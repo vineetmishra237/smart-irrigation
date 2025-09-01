@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Irrigation Dashboard - AI Powered</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* --- DARK THEME STYLES --- */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+            --success-gradient: linear-gradient(135deg, #059669 0%, #047857 100%);
+            --warning-gradient: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            --dark-gradient: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            --neutral-light: #374151; /* Darker neutral */
+            --neutral-medium: #4b5563; /* Darker medium */
+            --neutral-dark: #1f2937; /* Even darker */
+            --text-primary: #e5e7eb; /* Light gray for text */
+            --text-secondary: #9ca3af; /* Dimmer gray for secondary text */
+            --glass-bg: rgba(31, 41, 55, 0.25); /* Dark, transparent background */
+            --glass-border: rgba(55, 65, 81, 0.3); /* Subtle border for glass effect */
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+        
+        .glass-morphism {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .gradient-card {
+            background: linear-gradient(135deg, rgba(31, 41, 55, 0.3), rgba(31, 41, 55, 0.2));
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .floating-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .step-item {
+            border-left: 3px solid var(--neutral-medium);
+            transition: all 0.4s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .step-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--accent-gradient);
+            transform: scaleY(0);
+            transition: transform 0.4s ease;
+        }
+        
+        .step-item.step-success::before {
+            background: var(--success-gradient);
+            transform: scaleY(1);
+        }
+        
+        .step-item.step-error::before {
+            background: var(--warning-gradient);
+            transform: scaleY(1);
+        }
+        
+        .modern-input {
+            background: rgba(55, 65, 81, 0.5);
+            border: 2px solid var(--neutral-medium);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .modern-input:focus {
+            background: rgba(55, 65, 81, 0.8);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        
+        .modern-input::placeholder {
+            color: var(--text-secondary);
+        }
+        
+        .modern-button {
+            background: var(--accent-gradient);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .modern-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.25);
+        }
+        
+        .modern-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 0.5s;
+        }
+        
+        .modern-button:hover::before {
+            left: 100%;
+        }
+        
+        .stats-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+        }
+        
+        .weather-widget, .soil-widget, .prediction-widget, .efficiency-widget {
+            background: var(--primary-gradient);
+        }
+        
+        .loading-spinner {
+            border: 4px solid var(--neutral-medium);
+            border-radius: 50%;
+            border-top: 4px solid #3b82f6;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .progress-bar {
+            background: var(--neutral-medium);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: var(--success-gradient);
+            height: 6px;
+            border-radius: 8px;
+            transition: width 1s ease-in-out;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0,0,0, 0.3);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: var(--success-gradient);
+        }
+        
+        .notification.error {
+            background: var(--warning-gradient);
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 56px;
+            height: 30px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--neutral-medium);
+            transition: .4s;
+            border-radius: 30px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+        }
+        
+        input:checked + .slider {
+            background: var(--accent-gradient);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body class="min-h-screen relative overflow-x-hidden">
+    <!-- Animated Background -->
+    <div class="fixed inset-0 z-0">
+        <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800"></div>
+        <div class="absolute top-0 left-0 w-full h-full opacity-30">
+            <div class="floating-animation absolute top-20 left-10 w-20 h-20 bg-blue-500 bg-opacity-20 rounded-full blur-2xl"></div>
+            <div class="floating-animation absolute top-40 right-20 w-32 h-32 bg-slate-500 bg-opacity-20 rounded-full blur-3xl" style="animation-delay: -2s;"></div>
+            <div class="floating-animation absolute bottom-20 left-1/4 w-24 h-24 bg-gray-500 bg-opacity-20 rounded-full blur-2xl" style="animation-delay: -4s;"></div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <!-- Main Content -->
+    <div class="relative z-10 container mx-auto px-4 py-8">
+        <!-- Header Section -->
+        <header class="text-center mb-12">
+            <div class="inline-flex items-center justify-center w-20 h-20 glass-morphism rounded-full mb-6 floating-animation">
+                <i class="fas fa-seedling text-3xl text-green-400"></i>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold text-slate-100 mb-4">
+                Smart Irrigation
+            </h1>
+            <p class="text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed">
+                Advanced AI-powered water management system with real-time analytics and predictive intelligence
+            </p>
+            <div class="flex justify-center items-center mt-6 space-x-6">
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-green-500 rounded-full pulse-dot" id="system-status"></div>
+                    <span class="text-green-400 font-medium" id="system-text">System Online</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-wifi text-blue-400" id="weather-icon"></i>
+                    <span class="text-blue-400 font-medium" id="weather-status">Weather API</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-database text-purple-400" id="firebase-icon"></i>
+                    <span class="text-purple-400 font-medium" id="firebase-status">Firebase</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Real-time Status Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            <div class="stats-card p-6 rounded-2xl text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-200 font-medium">Weather</p>
+                        <p class="text-2xl font-bold" id="weather-temp">--°C</p>
+                        <p class="text-sm text-blue-300" id="weather-desc">Loading...</p>
+                    </div>
+                    <i class="fas fa-cloud-sun text-3xl text-blue-300"></i>
+                </div>
+                <div class="mt-4 progress-bar">
+                    <div class="progress-fill" id="humidity-progress" style="width: 0%"></div>
+                </div>
+                <p class="text-xs text-blue-300 mt-1">Humidity: <span id="humidity-value">--%</span></p>
+            </div>
+
+            <div class="stats-card p-6 rounded-2xl text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-green-200 font-medium">Soil Moisture</p>
+                        <p class="text-2xl font-bold" id="soil-moisture">--%</p>
+                        <p class="text-sm text-green-300" id="soil-status">Analyzing...</p>
+                    </div>
+                    <i class="fas fa-tint text-3xl text-green-300"></i>
+                </div>
+                <div class="mt-4 progress-bar">
+                    <div class="progress-fill" id="soil-progress" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="stats-card p-6 rounded-2xl text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-purple-200 font-medium">AI Prediction</p>
+                        <p class="text-2xl font-bold" id="ai-confidence">--%</p>
+                        <p class="text-sm text-purple-300">Confidence</p>
+                    </div>
+                    <i class="fas fa-brain text-3xl text-purple-300"></i>
+                </div>
+                <div class="mt-4 progress-bar">
+                    <div class="progress-fill" id="ai-progress" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="stats-card p-6 rounded-2xl text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-pink-200 font-medium">Efficiency</p>
+                        <p class="text-2xl font-bold" id="efficiency-score">--%</p>
+                        <p class="text-sm text-pink-300">Water Saved</p>
+                    </div>
+                    <i class="fas fa-leaf text-3xl text-pink-300"></i>
+                </div>
+                <div class="mt-4 progress-bar">
+                    <div class="progress-fill" id="efficiency-progress" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Enhanced Control Panel -->
+            <div class="glass-morphism p-8 rounded-3xl">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-3xl font-bold text-slate-200 flex items-center">
+                        <i class="fas fa-sliders-h mr-3 text-blue-400"></i>
+                        Control Panel
+                    </h2>
+                    <div class="flex items-center space-x-3">
+                        <span class="text-slate-300 text-sm font-medium">Auto Mode</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="auto-mode">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <form id="prediction-form">
+                    <div class="space-y-8">
+                        <!-- Valve Diameter -->
+                        <div class="group">
+                            <label for="valve_diameter" class="block text-sm font-semibold text-slate-300 mb-3 flex items-center">
+                                <i class="fas fa-cog mr-2 text-blue-400"></i>
+                                Valve Diameter (inches)
+                            </label>
+                            <div class="relative">
+                                <input type="number" id="valve_diameter" name="valve_diameter" value="5" step="0.1" required 
+                                       class="w-full px-6 py-4 modern-input rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none">
+                                <div class="absolute right-4 top-4 text-slate-400">
+                                    <i class="fas fa-ruler"></i>
+                                </div>
+                            </div>
+                            <div class="mt-2 flex justify-between text-xs text-slate-500">
+                                <span>Min: 2"</span>
+                                <span>Recommended: 5-8"</span>
+                                <span>Max: 12"</span>
+                            </div>
+                        </div>
+
+                        <!-- Soil Type -->
+                        <div class="group">
+                            <label for="soil_type" class="block text-sm font-semibold text-slate-300 mb-3 flex items-center">
+                                <i class="fas fa-mountain mr-2 text-green-400"></i>
+                                Soil Type
+                            </label>
+                            <div class="relative">
+                                <select id="soil_type" name="soil_type" required 
+                                        class="w-full px-6 py-4 modern-input rounded-2xl text-slate-200 focus:outline-none appearance-none">
+                                    <option value="1" class="bg-gray-700 text-white">🏖 Sandy Soil - Fast drainage</option>
+                                    <option value="2" class="bg-gray-700 text-white">🌱 Loamy Soil - Balanced retention</option>
+                                    <option value="3" class="bg-gray-700 text-white">🏔 Clay Soil - High retention</option>
+                                </select>
+                                <div class="absolute right-4 top-4 text-slate-400 pointer-events-none">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Field Area -->
+                        <div class="group">
+                            <label for="field_area" class="block text-sm font-semibold text-slate-300 mb-3 flex items-center">
+                                <i class="fas fa-vector-square mr-2 text-purple-400"></i>
+                                Field Coverage Area (m²)
+                            </label>
+                            <div class="relative">
+                                <input type="number" id="field_area" name="field_area" value="100" step="1" required 
+                                       class="w-full px-6 py-4 modern-input rounded-2xl text-slate-200 placeholder-slate-500 focus:outline-none">
+                                <div class="absolute right-4 top-4 text-slate-400">
+                                    <i class="fas fa-expand-arrows-alt"></i>
+                                </div>
+                            </div>
+                            <div class="mt-2 text-xs text-slate-500">
+                                <span id="area-estimate">≈ 0.01 hectares</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Submit Button -->
+                    <div class="mt-10">
+                        <button type="submit" id="predict-button" 
+                                class="w-full modern-button text-white font-bold py-6 px-8 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-200 relative overflow-hidden group">
+                            <span id="button-text" class="flex items-center justify-center">
+                                <i class="fas fa-rocket mr-3"></i>
+                                Calculate Optimal Irrigation
+                            </span>
+                            <span id="button-spinner" class="hidden flex items-center justify-center">
+                                <div class="loading-spinner mr-3"></div>
+                                AI Processing...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Quick Settings -->
+                <div class="mt-8 pt-6 border-t border-slate-700">
+                    <h3 class="text-slate-300 font-semibold mb-4 flex items-center">
+                        <i class="fas fa-bolt mr-2 text-yellow-400"></i>
+                        Quick Settings
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button class="modern-input px-4 py-3 rounded-xl text-slate-300 text-sm hover:bg-slate-700 transition-all border-slate-600">
+                            <i class="fas fa-clock mr-2 text-blue-400"></i>
+                            Schedule
+                        </button>
+                        <button class="modern-input px-4 py-3 rounded-xl text-slate-300 text-sm hover:bg-slate-700 transition-all border-slate-600">
+                            <i class="fas fa-history mr-2 text-green-400"></i>
+                            History
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Results & Analytics Panel -->
+            <div class="glass-morphism p-8 rounded-3xl">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-3xl font-bold text-slate-200 flex items-center">
+                        <i class="fas fa-chart-line mr-3 text-green-400"></i>
+                        Analytics Dashboard
+                    </h2>
+                    <div class="flex space-x-2">
+                        <button class="px-4 py-2 bg-slate-700 rounded-lg text-slate-300 text-sm hover:bg-slate-600 transition-all border border-slate-600">
+                            <i class="fas fa-download mr-2"></i>Export
+                        </button>
+                        <button class="px-4 py-2 bg-slate-700 rounded-lg text-slate-300 text-sm hover:bg-slate-600 transition-all border border-slate-600">
+                            <i class="fas fa-share mr-2"></i>Share
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Prediction Result Card -->
+                <div id="result-container" class="hidden mb-8 gradient-card p-8 rounded-2xl text-center relative overflow-hidden border border-slate-700">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-slate-100 bg-opacity-10 rounded-full -mr-16 -mt-16"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-center mb-4">
+                            <div class="w-16 h-16 bg-green-900 bg-opacity-50 rounded-full flex items-center justify-center">
+                                <i class="fas fa-check text-2xl text-green-300"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-slate-200 text-lg font-semibold mb-2">Optimal Irrigation Time</h3>
+                        <p id="prediction-output" class="text-5xl font-bold text-slate-100 mb-2"></p>
+                        <p id="volume-details" class="text-slate-400 text-sm"></p>
+                        <div class="mt-6 grid grid-cols-3 gap-4">
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-slate-100" id="water-volume">0</p>
+                                <p class="text-xs text-slate-500">Liters</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-slate-100" id="efficiency-rate">0%</p>
+                                <p class="text-xs text-slate-500">Efficiency</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-slate-100" id="cost-savings">$0</p>
+                                <p class="text-xs text-slate-500">Saved</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Process Steps -->
+                <div class="mb-8">
+                    <h3 class="text-slate-300 font-semibold mb-4 flex items-center">
+                        <i class="fas fa-cogs mr-2 text-blue-400"></i>
+                        AI Processing Steps
+                    </h3>
+                    <div class="bg-slate-800 bg-opacity-50 rounded-2xl p-6 min-h-[200px] border border-slate-700">
+                        <p id="log-placeholder" class="text-slate-500 text-center py-8">
+                            <i class="fas fa-robot text-3xl mb-4 block text-blue-400"></i>
+                            AI is ready to analyze your irrigation needs...
+                        </p>
+                        <div id="steps-container" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-2 gap-4">
+                    <button class="modern-input px-6 py-4 rounded-xl text-slate-300 font-medium hover:bg-slate-700 transition-all flex items-center justify-center border-slate-600">
+                        <i class="fas fa-play mr-2 text-green-400"></i>
+                        Start Irrigation
+                    </button>
+                    <button class="modern-input px-6 py-4 rounded-xl text-slate-300 font-medium hover:bg-slate-700 transition-all flex items-center justify-center border-slate-600">
+                        <i class="fas fa-stop mr-2 text-red-400"></i>
+                        Emergency Stop
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Analytics Section -->
+        <div class="mt-16">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-slate-200 mb-4 flex items-center justify-center">
+                    <i class="fas fa-analytics mr-4 text-purple-400"></i>
+                    Water Conservation Intelligence
+                </h2>
+                <p class="text-slate-400 max-w-2xl mx-auto">
+                    Real-time insights and predictive analytics to maximize water efficiency and crop yield
+                </p>
+            </div>
+
+            <!-- Enhanced Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <div class="glass-morphism p-6 rounded-2xl text-center group hover:scale-105 transition-transform">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-green-900 bg-opacity-40 rounded-full flex items-center justify-center group-hover:bg-green-800 transition-all">
+                        <i class="fas fa-tint text-2xl text-green-300"></i>
+                    </div>
+                    <p class="text-slate-400 font-medium mb-2">Total Water Saved</p>
+                    <p id="total-saved" class="text-4xl font-bold text-slate-100 mb-1">0 m³</p>
+                    <p class="text-xs text-green-400">+12% this month</p>
+                </div>
+
+                <div class="glass-morphism p-6 rounded-2xl text-center group hover:scale-105 transition-transform">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-blue-900 bg-opacity-40 rounded-full flex items-center justify-center group-hover:bg-blue-800 transition-all">
+                        <i class="fas fa-percentage text-2xl text-blue-300"></i>
+                    </div>
+                    <p class="text-slate-400 font-medium mb-2">Conservation Rate</p>
+                    <p id="savings-percentage" class="text-4xl font-bold text-slate-100 mb-1">0%</p>
+                    <p class="text-xs text-blue-400">Above target</p>
+                </div>
+
+                <div class="glass-morphism p-6 rounded-2xl text-center group hover:scale-105 transition-transform">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-purple-900 bg-opacity-40 rounded-full flex items-center justify-center group-hover:bg-purple-800 transition-all">
+                        <i class="fas fa-seedling text-2xl text-purple-300"></i>
+                    </div>
+                    <p class="text-slate-400 font-medium mb-2">Crop Health Index</p>
+                    <p class="text-4xl font-bold text-slate-100 mb-1">97%</p>
+                    <p class="text-xs text-purple-400">Excellent</p>
+                </div>
+
+                <div class="glass-morphism p-6 rounded-2xl text-center group hover:scale-105 transition-transform">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-yellow-900 bg-opacity-40 rounded-full flex items-center justify-center group-hover:bg-yellow-800 transition-all">
+                        <i class="fas fa-dollar-sign text-2xl text-yellow-300"></i>
+                    </div>
+                    <p class="text-slate-400 font-medium mb-2">Cost Savings</p>
+                    <p class="text-4xl font-bold text-slate-100 mb-1">$1,247</p>
+                    <p class="text-xs text-yellow-400">This quarter</p>
+                </div>
+            </div>
+
+            <!-- Enhanced Chart Container -->
+            <div class="glass-morphism p-8 rounded-3xl">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-2xl font-bold text-slate-200 flex items-center">
+                        <i class="fas fa-chart-area mr-3 text-blue-400"></i>
+                        Water Usage Analytics
+                    </h3>
+                    <div class="flex space-x-2">
+                        <button class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-all">
+                            Daily
+                        </button>
+                        <button class="px-4 py-2 bg-slate-700 rounded-lg text-slate-300 text-sm hover:bg-slate-600 transition-all">
+                            Weekly
+                        </button>
+                        <button class="px-4 py-2 bg-slate-700 rounded-lg text-slate-300 text-sm hover:bg-slate-600 transition-all">
+                            Monthly
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <p id="chart-placeholder" class="text-center text-slate-500 py-16">
+                        <i class="fas fa-chart-line text-6xl mb-6 block text-slate-400 opacity-50"></i>
+                        <span class="text-xl">Run a prediction to see comprehensive analytics</span>
+                        <br>
+                        <span class="text-sm">Advanced insights coming soon...</span>
+                    </p>
+                    <canvas id="waterUsageChart" class="hidden max-h-96"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-20 text-center">
+            <div class="glass-morphism p-8 rounded-2xl">
+                <p class="text-slate-400 mb-4">
+                    <i class="fas fa-leaf mr-2 text-green-400"></i>
+                    Powered by Advanced AI & Machine Learning
+                </p>
+                <div class="flex justify-center space-x-6 text-sm text-slate-500">
+                    <a href="#" class="hover:text-slate-300 transition-colors">
+                        <i class="fas fa-info-circle mr-1"></i>About
+                    </a>
+                    <a href="#" class="hover:text-slate-300 transition-colors">
+                        <i class="fas fa-cog mr-1"></i>Settings
+                    </a>
+                    <a href="#" class="hover:text-slate-300 transition-colors">
+                        <i class="fas fa-question-circle mr-1"></i>Help
+                    </a>
+                    <a href="#" class="hover:text-slate-300 transition-colors">
+                        <i class="fas fa-shield-alt mr-1"></i>Privacy
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // --- Enhanced Global Variables ---
+        let waterUsageChart;
+        let realTimeData = {
+            weather: { temp: null, humidity: null, description: "Loading..." },
+            soil: { moisture: null, status: "Checking..." },
+            ai: { confidence: null },
+            efficiency: { score: null }
+        };
+
+        // --- DOM Elements ---
+        const form = document.getElementById('prediction-form');
+        const predictButton = document.getElementById('predict-button');
+        const buttonText = document.getElementById('button-text');
+        const buttonSpinner = document.getElementById('button-spinner');
+        const stepsContainer = document.getElementById('steps-container');
+        const logPlaceholder = document.getElementById('log-placeholder');
+        const resultContainer = document.getElementById('result-container');
+        const predictionOutput = document.getElementById('prediction-output');
+        const volumeDetails = document.getElementById('volume-details');
+        const totalSavedEl = document.getElementById('total-saved');
+        const savingsPercentageEl = document.getElementById('savings-percentage');
+        const chartPlaceholder = document.getElementById('chart-placeholder');
+        const waterUsageChartCanvas = document.getElementById('waterUsageChart');
+        const autoModeToggle = document.getElementById('auto-mode');
+        const fieldAreaInput = document.getElementById('field_area');
+
+        // --- Enhanced Utility Functions ---
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} mr-2"></i>
+                ${message}
+            `;
+            
+            const container = document.getElementById('notification-container');
+            container.appendChild(notification);
+            
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+
+        function updateProgressBar(elementId, value, duration = 1000) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.style.transition = `width ${duration}ms ease-in-out`;
+                element.style.width = `${Math.min(value, 100)}%`;
+            }
+        }
+
+        function animateNumber(elementId, targetValue, suffix = '', duration = 1000) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const startValue = 0;
+            const increment = targetValue / (duration / 16);
+            let currentValue = startValue;
+            
+            const timer = setInterval(() => {
+                currentValue += increment;
+                if (currentValue >= targetValue) {
+                    currentValue = targetValue;
+                    clearInterval(timer);
+                }
+                element.textContent = Math.round(currentValue) + suffix;
+            }, 16);
+        }
+
+        // --- Real-time Dashboard Updates ---
+        async function updateRealTimeDashboard() {
+            let weatherOk = false;
+            let firebaseOk = false;
+
+            try {
+                const weatherResponse = await fetch('/api/weather');
+                if (weatherResponse.ok) {
+                    const weatherData = await weatherResponse.json();
+                    if (weatherData.temperature !== null && weatherData.humidity !== null) {
+                        realTimeData.weather.temp = Math.round(weatherData.temperature);
+                        realTimeData.weather.humidity = weatherData.humidity || Math.round(60 + Math.random() * 30);
+                        realTimeData.weather.description = weatherData.description || "Current conditions";
+                        weatherOk = true;
+                    }
+                }
+            } catch (error) {
+                console.log('Weather data not available');
+                realTimeData.weather.description = "Service unavailable";
+            }
+
+            try {
+                const soilResponse = await fetch('/api/soil-moisture');
+                if (soilResponse.ok) {
+                    const soilData = await soilResponse.json();
+                    if (soilData.moisture !== null) {
+                        realTimeData.soil.moisture = Math.round(soilData.moisture);
+                        realTimeData.soil.status = soilData.status;
+                        firebaseOk = true;
+                    }
+                }
+            } catch (error) {
+                console.log('Soil data not available');
+                realTimeData.soil.status = "Sensor offline";
+            }
+
+            updateServiceStatus(weatherOk, firebaseOk);
+
+            let dataPoints = 0;
+            if (weatherOk) dataPoints++;
+            if (firebaseOk) dataPoints++;
+            realTimeData.ai.confidence = Math.round((dataPoints / 2) * 85 + 10 + Math.random() * 5);
+            realTimeData.efficiency.score = Math.round(80 + (dataPoints / 2) * 15 + Math.random() * 5);
+
+            updateDashboardDisplay();
+        }
+
+        function updateServiceStatus(weatherOk, firebaseOk) {
+            const weatherIcon = document.getElementById('weather-icon');
+            const weatherStatus = document.getElementById('weather-status');
+            if (weatherOk) {
+                weatherIcon.className = 'fas fa-wifi text-blue-400';
+                weatherStatus.textContent = 'Weather Live';
+                weatherStatus.className = 'text-blue-400 font-medium';
+            } else {
+                weatherIcon.className = 'fas fa-wifi-slash text-red-400';
+                weatherStatus.textContent = 'Weather Offline';
+                weatherStatus.className = 'text-red-500 font-medium';
+            }
+
+            const firebaseIcon = document.getElementById('firebase-icon');
+            const firebaseStatus = document.getElementById('firebase-status');
+            if (firebaseOk) {
+                firebaseIcon.className = 'fas fa-database text-purple-400';
+                firebaseStatus.textContent = 'Firebase Live';
+                firebaseStatus.className = 'text-purple-400 font-medium';
+            } else {
+                firebaseIcon.className = 'fas fa-exclamation-triangle text-red-400';
+                firebaseStatus.textContent = 'Firebase Offline';
+                firebaseStatus.className = 'text-red-500 font-medium';
+            }
+
+            const systemStatus = document.getElementById('system-status');
+            const systemText = document.getElementById('system-text');
+            const servicesOnline = (weatherOk ? 1 : 0) + (firebaseOk ? 1 : 0);
+            
+            if (servicesOnline === 2) {
+                systemStatus.className = 'w-3 h-3 bg-green-500 rounded-full pulse-dot';
+                systemText.textContent = 'All Systems Online';
+                systemText.className = 'text-green-400 font-medium';
+            } else if (servicesOnline === 1) {
+                systemStatus.className = 'w-3 h-3 bg-yellow-500 rounded-full pulse-dot';
+                systemText.textContent = 'Partial Service';
+                systemText.className = 'text-yellow-500 font-medium';
+            } else {
+                systemStatus.className = 'w-3 h-3 bg-red-500 rounded-full pulse-dot';
+                systemText.textContent = 'Limited Service';
+                systemText.className = 'text-red-500 font-medium';
+            }
+        }
+
+        function updateDashboardDisplay() {
+            document.getElementById('weather-temp').textContent = 
+                realTimeData.weather.temp !== null ? `${realTimeData.weather.temp}°C` : '--°C';
+            document.getElementById('weather-desc').textContent = realTimeData.weather.description;
+            document.getElementById('humidity-value').textContent = 
+                realTimeData.weather.humidity !== null ? `${realTimeData.weather.humidity}%` : '--%';
+            updateProgressBar('humidity-progress', realTimeData.weather.humidity || 0);
+
+            document.getElementById('soil-moisture').textContent = 
+                realTimeData.soil.moisture !== null ? `${realTimeData.soil.moisture}%` : '--%';
+            document.getElementById('soil-status').textContent = realTimeData.soil.status;
+            updateProgressBar('soil-progress', realTimeData.soil.moisture || 0);
+
+            document.getElementById('ai-confidence').textContent = 
+                realTimeData.ai.confidence !== null ? `${realTimeData.ai.confidence}%` : '--%';
+            updateProgressBar('ai-progress', realTimeData.ai.confidence || 0);
+
+            document.getElementById('efficiency-score').textContent = 
+                realTimeData.efficiency.score !== null ? `${realTimeData.efficiency.score}%` : '--%';
+            updateProgressBar('efficiency-progress', realTimeData.efficiency.score || 0);
+        }
+
+        function updateAreaEstimate() {
+            const area = parseFloat(fieldAreaInput.value) || 0;
+            const hectares = (area / 10000).toFixed(3);
+            document.getElementById('area-estimate').textContent = `≈ ${hectares} hectares`;
+        }
+
+        fieldAreaInput.addEventListener('input', updateAreaEstimate);
+
+        autoModeToggle.addEventListener('change', function() {
+            const isAuto = this.checked;
+            showNotification(`Auto mode ${isAuto ? 'enabled' : 'disabled'}`, 'success');
+            form.querySelectorAll('input, select').forEach(input => {
+                if (input.type !== 'checkbox') {
+                    input.style.opacity = isAuto ? '0.6' : '1';
+                    input.disabled = isAuto;
+                }
+            });
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (autoModeToggle.checked) {
+                showNotification('Disable auto mode for manual calculation', 'error');
+                return;
+            }
+
+            setLoading(true);
+            stepsContainer.innerHTML = '';
+            logPlaceholder.style.display = 'none';
+            resultContainer.classList.add('hidden');
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/predict', { method: 'POST', body: formData });
+                if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
+                const data = await response.json();
+                
+                displaySteps(data.steps, data.error);
+                
+                if (data.pump_run_time) {
+                    predictionOutput.textContent = data.pump_run_time;
+                    volumeDetails.textContent = `To deliver ${data.total_volume} m³ of water at ${data.discharge_rate} m³/s.`;
+                    
+                    const volume = parseFloat(data.total_volume) || 0;
+                    const efficiency = data.efficiency_percentage || 94;
+                    const costPerM3 = 2.5;
+                    
+                    document.getElementById('water-volume').textContent = Math.round(volume * 1000);
+                    document.getElementById('efficiency-rate').textContent = Math.round(efficiency) + '%';
+                    document.getElementById('cost-savings').textContent = '$' + (volume * costPerM3 * (efficiency/100)).toFixed(2);
+                    
+                    realTimeData.ai.confidence = Math.round(85 + (efficiency / 100) * 15);
+                    updateProgressBar('ai-progress', realTimeData.ai.confidence);
+                    document.getElementById('ai-confidence').textContent = `${realTimeData.ai.confidence}%`;
+                    
+                    resultContainer.classList.remove('hidden');
+                    updateAnalytics();
+                    showNotification('Irrigation plan optimized!', 'success');
+                } else if (data.error) {
+                    showNotification('Analysis completed with warnings', 'error');
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                showNotification('Connection error - Check your network', 'error');
+                displaySteps([`❌ Network or server error occurred. Please try again.`], true);
+            } finally {
+                setLoading(false);
+            }
+        });
+        
+        function setLoading(isLoading) {
+            predictButton.disabled = isLoading;
+            buttonText.classList.toggle('hidden', isLoading);
+            buttonSpinner.classList.toggle('hidden', !isLoading);
+            predictButton.style.transform = isLoading ? 'scale(0.98)' : 'scale(1)';
+        }
+
+        function displaySteps(steps, hasError = false) {
+            steps.forEach((step, index) => {
+                setTimeout(() => {
+                    const stepDiv = document.createElement('div');
+                    stepDiv.className = 'step-item pl-6 py-3 relative text-slate-300';
+                    
+                    let statusClass = 'step-success';
+                    let iconClass = 'fas fa-check';
+                    let iconColor = 'bg-green-500';
+
+                    if (step.includes('❌') || (hasError && index === steps.length - 1)) {
+                        statusClass = 'step-error';
+                        iconClass = 'fas fa-times';
+                        iconColor = 'bg-red-500';
+                    } else if (step.includes('⚠') || step.includes('⚠️')) {
+                        iconColor = 'bg-yellow-500';
+                        iconClass = 'fas fa-exclamation';
+                    }
+
+                    stepDiv.classList.add(statusClass);
+                    stepDiv.innerHTML = `
+                        <div class="absolute -left-[11px] top-4 w-5 h-5 ${iconColor} rounded-full flex items-center justify-center">
+                            <i class="${iconClass} text-xs text-white"></i>
+                        </div>
+                        ${step}
+                    `;
+                    stepsContainer.appendChild(stepDiv);
+                }, index * 100);
+            });
+        }
+        
+        async function updateAnalytics() {
+            try {
+                const response = await fetch('/stats');
+                if (!response.ok) throw new Error('Failed to fetch stats');
+                const stats = await response.json();
+
+                document.getElementById('total-saved').textContent = `${stats.total_water_saved} m³`;
+                document.getElementById('savings-percentage').textContent = `${stats.savings_percentage}%`;
+
+                if (stats.chart_data && stats.chart_data.labels.length > 0) {
+                    chartPlaceholder.classList.add('hidden');
+                    waterUsageChartCanvas.classList.remove('hidden');
+                    renderEnhancedChart(stats.chart_data);
+                }
+            } catch (error) {
+                console.error("Error updating analytics:", error);
+            }
+        }
+
+        function renderEnhancedChart(data) {
+            const ctx = waterUsageChartCanvas.getContext('2d');
+            
+            if (waterUsageChart) waterUsageChart.destroy();
+
+            const gradient1 = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient1.addColorStop(0, 'rgba(220, 38, 38, 0.6)');
+            gradient1.addColorStop(1, 'rgba(220, 38, 38, 0.1)');
+
+            const gradient2 = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient2.addColorStop(0, 'rgba(59, 130, 246, 0.6)');
+            gradient2.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
+
+            waterUsageChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        { label: 'Traditional Usage', data: data.baseline_usage, backgroundColor: gradient1, borderColor: '#ef4444', borderWidth: 2, fill: true, tension: 0.4, pointBackgroundColor: '#ef4444', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5 },
+                        { label: 'Smart AI Usage', data: data.smart_usage, backgroundColor: gradient2, borderColor: '#3b82f6', borderWidth: 2, fill: true, tension: 0.4, pointBackgroundColor: '#3b82f6', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { color: '#9ca3af', font: { size: 13, weight: '500' }, usePointStyle: true, pointStyle: 'circle' } },
+                        title: { display: true, text: 'Water Usage Optimization Over Time', color: '#e5e7eb', font: { size: 16, weight: '600' } }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(55, 65, 81, 0.5)' }, ticks: { color: '#9ca3af', font: { size: 11 } } },
+                        y: { grid: { color: 'rgba(55, 65, 81, 0.5)' }, ticks: { color: '#9ca3af', font: { size: 11 }, callback: (value) => `${value} m³` }, title: { display: true, text: 'Water Volume (m³)', color: '#9ca3af', font: { size: 12, weight: '500' } } }
+                    },
+                    interaction: { intersect: false, mode: 'index' }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await updateRealTimeDashboard();
+            updateAreaEstimate();
+            updateAnalytics();
+            setInterval(updateRealTimeDashboard, 30000);
+            showNotification('Smart Irrigation System initialized!', 'success');
+        });
+
+    </script>
+</body>
+</html>
+
