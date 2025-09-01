@@ -393,61 +393,6 @@ sudo python app.py  # Linux/macOS
 3. **Async Processing**: Use Celery for background tasks
 4. **CDN**: Use CDN for static assets
 
-## 🚀 Deployment Options
-
-### Option 1: Heroku Deployment
-
-1. **Create `Procfile`:**
-```
-web: python app.py
-```
-
-2. **Deploy:**
-```bash
-git add .
-git commit -m "Deploy to Heroku"
-heroku create your-app-name
-git push heroku main
-```
-
-### Option 2: Docker Deployment
-
-1. **Create `Dockerfile`:**
-```dockerfile
-FROM python:3.9-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-EXPOSE 5001
-CMD ["python", "app.py"]
-```
-
-2. **Build and Run:**
-```bash
-docker build -t smart-irrigation .
-docker run -p 5001:5001 smart-irrigation
-```
-
-### Option 3: Local Server
-
-```bash
-# Install gunicorn for production
-pip install gunicorn
-
-# Run with gunicorn
-gunicorn -w 4 -b 0.0.0.0:5001 app:app
-```
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Commit changes**: `git commit -m 'Add amazing feature'`
-4. **Push to branch**: `git push origin feature/amazing-feature`
-5. **Open a Pull Request**
 
 ### Development Guidelines
 
@@ -462,7 +407,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Authors
 
-- **Your Name** - *Initial work* - [YourGitHub](https://github.com/yourusername)
+- **Team Infinity_loop** 
 
 ## 🙏 Acknowledgments
 
@@ -471,15 +416,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - scikit-learn for machine learning capabilities
 - Flask community for the web framework
 - Tailwind CSS for styling framework
-
-## 📞 Support
-
-If you encounter any issues or have questions:
-
-1. **Check the troubleshooting section above**
-2. **Search existing issues**: [GitHub Issues](https://github.com/yourusername/smart-irrigation-system/issues)
-3. **Create a new issue**: Include error messages and system information
-4. **Contact**: your.email@example.com
 
 ## 🔮 Future Enhancements
 
@@ -494,10 +430,5 @@ If you encounter any issues or have questions:
 - [ ] Historical data analysis
 - [ ] Integration with more IoT platforms
 
-## 🌟 Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/smart-irrigation-system&type=Date)](https://star-history.com/#yourusername/smart-irrigation-system&Date)
-
----
-
-**Made with ❤️ for sustainable agriculture and water conservation** 🌱💧
+<img width="1894" height="975" alt="Screenshot 2025-09-01 232623" src="https://github.com/user-attachments/assets/2caf004e-f98b-449e-af37-c94fd8c1a5f3" />
+<img width="1893" height="961" alt="Screenshot 2025-09-01 232644" src="https://github.com/user-attachments/assets/8ac68035-6a4c-4444-8421-1ea1aa84c103" />
