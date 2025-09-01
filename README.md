@@ -4,6 +4,7 @@ An advanced AI-powered irrigation system that uses machine learning, real-time w
 
 ![Smart Irrigation Dashboard](https://img.shields.io/badge/Status-Active-brightgreen) ![Python](https://img.shields.io/badge/Python-3.8+-blue) ![Flask](https://img.shields.io/badge/Flask-2.0+-red) ![License](https://img.shields.io/badge/License-MIT-yellow)
 
+## Deploy Link : [Smart Irrigation Dashboard](https://c398f8f68a0e.ngrok-free.app/)
 ## 🚀 Features
 
 - **🤖 AI-Powered Predictions**: Machine learning model for optimal water discharge calculations
